@@ -19,10 +19,16 @@ DATABASE_URL_SECRET = os.getenv("DATABASE_URL", "")
 def get_database_connection():
     """Get database connection using AWS Secrets Manager"""
     try:
-        # Get database credentials from AWS Secrets Manager
-        secrets_client = boto3.client('secretsmanager', region_name='us-east-1')
-        response = secrets_client.get_secret_value(SecretId=DATABASE_URL_SECRET)
-        secret = json.loads(response['SecretString'])
+        # Check if DATABASE_URL_SECRET is available
+        if not DATABASE_URL_SECRET:
+            logger.error("DATABASE_URL environment variable is empty or not set")
+            return None
+            
+        logger.info(f"DATABASE_URL_SECRET length: {len(DATABASE_URL_SECRET)}")
+        
+        # DATABASE_URL is injected as a secret, so it contains the JSON directly
+        secret = json.loads(DATABASE_URL_SECRET)
+        logger.info(f"Parsed secret keys: {list(secret.keys())}")
         
         # Connect to database
         conn = psycopg2.connect(
@@ -32,7 +38,14 @@ def get_database_connection():
             password=secret['password'],
             port=secret.get('port', 5432)
         )
+        logger.info("Database connection successful")
         return conn
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse DATABASE_URL as JSON: {e}")
+        return None
+    except KeyError as e:
+        logger.error(f"Missing key in database secret: {e}")
+        return None
     except Exception as e:
         logger.error(f"Database connection failed: {e}")
         return None
