@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Stage3v3 Dashboard</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background-color: #f5f5f5; 
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        h1 { color: #333; text-align: center; }
+        .status { 
+            padding: 15px; 
+            margin: 20px 0; 
+            border-radius: 5px; 
+            border-left: 5px solid;
+        }
+        .healthy { 
+            background-color: #d4edda; 
+            border-color: #28a745; 
+            color: #155724; 
+        }
+        .unhealthy { 
+            background-color: #f8d7da; 
+            border-color: #dc3545; 
+            color: #721c24; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            margin: 10px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        button:hover { background: #0056b3; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 5px; 
+            overflow-x: auto; 
+            font-size: 12px;
+        }
+        .endpoint { 
+            margin: 10px 0; 
+            padding: 10px; 
+            background: #e9ecef; 
+            border-radius: 3px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Agentic Stage3v3 Dashboard</h1>
+        
+        <div id="status-container">
+            <div class="status healthy">
+                <h3>Frontend Status: Loading...</h3>
+                <p>Node.js service status</p>
+            </div>
+            
+            <div class="status healthy">
+                <h3>Backend Status: Loading...</h3>
+                <p>FastAPI service status</p>
+            </div>
+            
+            <div class="status healthy">
+                <h3>Database Status: Loading...</h3>
+                <p>PostgreSQL connection status</p>
+            </div>
+        </div>
+
+        <div>
+            <button onclick="testHealth()">🔍 Test Health</button>
+            <button onclick="testDatabase()">🗄️ Test Database</button>
+            <button onclick="testStatus()">📊 Check Status</button>
+        </div>
+
+        <div class="endpoint">
+            <strong>Available Endpoints:</strong>
+            <ul>
+                <li><a href="/" target="_blank">/ - Home</a></li>
+                <li><a href="/health" target="_blank">/health - Health Check</a></li>
+                <li><a href="/api/status" target="_blank">/api/status - System Status</a></li>
+                <li><a href="/api/db-test" target="_blank">/api/db-test - Database Test</a></li>
+            </ul>
+        </div>
+
+        <div id="results">
+            <h3>Test Results:</h3>
+            <pre id="output">Click a test button to see results...</pre>
+        </div>
+    </div>
+
+    <script>
+        function updateOutput(data) {
+            document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+        }
+
+        function updateStatus(frontend, backend, database) {
+            const container = document.getElementById('status-container');
+            container.innerHTML = `
+                <div class="status ${frontend ? 'healthy' : 'unhealthy'}">
+                    <h3>Frontend Status: ${frontend ? 'Healthy ✅' : 'Unhealthy ❌'}</h3>
+                    <p>Node.js service status</p>
+                </div>
+                
+                <div class="status ${backend ? 'healthy' : 'unhealthy'}">
+                    <h3>Backend Status: ${backend ? 'Healthy ✅' : 'Unhealthy ❌'}</h3>
+                    <p>FastAPI service status</p>
+                </div>
+                
+                <div class="status ${database ? 'healthy' : 'unhealthy'}">
+                    <h3>Database Status: ${database ? 'Healthy ✅' : 'Unhealthy ❌'}</h3>
+                    <p>PostgreSQL connection status</p>
+                </div>
+            `;
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                updateOutput(data);
+                updateStatus(true, null, null);
+            } catch (error) {
+                updateOutput({error: 'Health check failed', details: error.message});
+                updateStatus(false, null, null);
+            }
+        }
+
+        async function testStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                updateOutput(data);
+                
+                const frontendHealthy = data.frontend && data.frontend.status === 'operational';
+                const backendHealthy = data.backend && data.backend.status !== 'unreachable';
+                const databaseHealthy = data.backend && data.backend.database_connected === true;
+                
+                updateStatus(frontendHealthy, backendHealthy, databaseHealthy);
+            } catch (error) {
+                updateOutput({error: 'Status check failed', details: error.message});
+                updateStatus(false, false, false);
+            }
+        }
+
+        async function testDatabase() {
+            try {
+                const response = await fetch('/api/db-test');
+                const data = await response.json();
+                updateOutput(data);
+                
+                const dbHealthy = data.backend_response && data.backend_response.database_connected === true;
+                updateStatus(null, true, dbHealthy);
+            } catch (error) {
+                updateOutput({error: 'Database test failed', details: error.message});
+                updateStatus(null, false, false);
+            }
+        }
+
+        // Auto-refresh status every 30 seconds
+        setInterval(testStatus, 30000);
+        
+        // Initial load
+        testStatus();
+    </script>
+</body>
+</html>

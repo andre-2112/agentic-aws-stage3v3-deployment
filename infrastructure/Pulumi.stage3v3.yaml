@@ -1,0 +1,20 @@
+config:
+  infrastructure:project-name: agentic-aws-stage3v3
+  infrastructure:environment: stage3v3
+  aws:region: us-east-1
+  infrastructure:vpc-cidr: 10.1.0.0/16
+  infrastructure:availability-zones: '["us-east-1a", "us-east-1b"]'
+  infrastructure:domain-name: a-g-e-n-t-i-c.com
+  infrastructure:subdomain: stage3v3
+  infrastructure:db-instance-class: db.t3.medium
+  infrastructure:db-allocated-storage: "20"
+  infrastructure:db-name: agentic_aws_db
+  infrastructure:db-backup-retention: "7"
+  infrastructure:ecs-cpu: "512"
+  infrastructure:ecs-memory: "1024"
+  infrastructure:desired-count: "2"
+  infrastructure:min-capacity: "1"
+  infrastructure:max-capacity: "10"
+  infrastructure:log-retention-days: "14"
+  infrastructure:cpu-threshold: "70"
+  infrastructure:memory-threshold: "80"
