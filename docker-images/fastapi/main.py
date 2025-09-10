@@ -30,13 +30,18 @@ def get_database_connection():
         secret = json.loads(DATABASE_URL_SECRET)
         logger.info(f"Parsed secret keys: {list(secret.keys())}")
         
+        # RDS secrets only contain username and password
+        # We need to construct the host and database name
+        db_host = "agentic-aws-stage3v3-primary.ckvaq6ye440c.us-east-1.rds.amazonaws.com"
+        db_name = "postgres"  # Default database name
+        
         # Connect to database
         conn = psycopg2.connect(
-            host=secret['host'],
-            database=secret['dbname'],
+            host=db_host,
+            database=db_name,
             user=secret['username'],
             password=secret['password'],
-            port=secret.get('port', 5432)
+            port=5432
         )
         logger.info("Database connection successful")
         return conn
